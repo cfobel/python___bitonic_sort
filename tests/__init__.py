@@ -6,6 +6,7 @@ from nose.tools import eq_, ok_, nottest
 import numpy as np
 
 from ..bitonic_sort import BitonicSorter, BitonicSorterForArbitraryN
+from ..bitonic_sort.cuda import sort_inplace
 
 
 @nottest
@@ -24,13 +25,21 @@ def test_sort(sort_func, count):
         raise ValueError
 
 
+@nottest
 def test_bitonic2n():
     sorter = BitonicSorter()
     for i in range(4, 11):
         yield test_sort, sorter.sort, (1 << i)
 
 
+@nottest
 def test_bitonic_any_n():
     sorter = BitonicSorterForArbitraryN()
-    for i in range(2, 5):
+    for i in range(2, 4):
         yield test_sort, sorter.sort, 10 ** i
+
+
+def test_bitonic_cuda():
+    data = np.arange(10, dtype=np.int32)
+    data = data[::-1]
+    print sort_inplace(data)

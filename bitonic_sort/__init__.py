@@ -1,56 +1,7 @@
 from __future__ import division
 
-'''
-public class BitonicSorter implements Sorter
-{
-    private int[] a;
-    // sorting direction:
-    private final static boolean ASCENDING=true, DESCENDING=false;
+import numpy as np
 
-    public void sort(int[] a)
-    {
-        this.a=a;
-        bitonicSort(0, a.length, ASCENDING);
-    }
-
-    private void bitonicSort(int lo, int n, boolean dir)
-    {
-        if (n>1)
-        {
-            int m=n/2;
-            bitonicSort(lo, m, ASCENDING);
-            bitonicSort(lo+m, m, DESCENDING);
-            bitonicMerge(lo, n, dir);
-        }
-    }
-
-    private void bitonicMerge(int lo, int n, boolean dir)
-    {
-        if (n>1)
-        {
-            int m=n/2;
-            for (int i=lo; i<lo+m; i++)
-                compare(i, i+m, dir);
-            bitonicMerge(lo, m, dir);
-            bitonicMerge(lo+m, m, dir);
-        }
-    }
-
-    private void compare(int i, int j, boolean dir)
-    {
-        if (dir==(a[i]>a[j]))
-            exchange(i, j);
-    }
-
-    private void exchange(int i, int j)
-    {
-        int t=a[i];
-        a[i]=a[j];
-        a[j]=t;
-    }
-
-}    // end class BitonicSorter
-'''
 
 class BitonicSorter(object):
     DESCENDING = False
@@ -73,13 +24,7 @@ class BitonicSorter(object):
 
     def _compare(self, i, j, direction):
         if direction == (self.data[i] > self.data[j]):
-            self._exchange(i, j)
-
-    def _exchange(self, i, j):
-        temp = self.data[i]
-        self.data[i] = self.data[j]
-        self.data[j] = temp
-        #self.data[i], self.data[j] = self.data[j], self.data[i]
+            self.data[i], self.data[j] = self.data[j], self.data[i]
 
     def sort(self, data):
         self.data = data
@@ -107,3 +52,18 @@ class BitonicSorterForArbitraryN(BitonicSorter):
         while k < n:
             k = k << 1
         return k >> 1
+
+
+if __name__ == '__main__':
+    #np.random.seed(0)
+    #data1 = np.random.randint(0, , size=16)
+    data1 = np.arange(0, 8)
+    data1 = data1[::-1]
+    #np.random.shuffle(data1)
+    data2 = data1.copy()
+
+    import pudb; pudb.set_trace()
+    data1.sort()
+    sorter = BitonicSorter()
+    sorter.sort(data2)
+    conflicts = np.where(data1 != data2)
