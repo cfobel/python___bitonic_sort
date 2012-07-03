@@ -35,8 +35,7 @@ def get_template_loader():
 jinja_env = Environment(loader=get_template_loader())
 
 
-def sort_inplace(in_data, thread_count=128, elements_per_thread=8,
-        dtype=None):
+def sort_inplace(in_data, ascending=True, dtype=None):
     code_template = jinja_env.get_template('bitonic_sort.cu')
     mod = SourceModule(code_template.render(), no_extern_c=True,
             options=['-I%s' % get_include_root()], keep=True)
@@ -56,12 +55,13 @@ def sort_inplace(in_data, thread_count=128, elements_per_thread=8,
 
     data = np.array(in_data, dtype=dtype)
 
-    shared = 0
+    shared = len(data) * dtype.itemsize
     block_count = 1
 
-    block = (thread_count, 1, 1)
+    block = (len(data), 1, 1)
     grid = (block_count, 1, 1)
 
-    test(np.int32(len(data)), drv.InOut(data), block=block, grid=grid)
+    test(np.int32(len(data)), drv.InOut(data), np.uint8(ascending), block=block,
+            grid=grid, shared=shared)
 
     return data

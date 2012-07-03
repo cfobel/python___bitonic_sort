@@ -39,7 +39,26 @@ def test_bitonic_any_n():
         yield test_sort, sorter.sort, 10 ** i
 
 
+@nottest
+def test_bitonic_cuda_two_power(data_size):
+    assert(np.log2(data_size) == int(np.log2(data_size)))
+
+    data = np.arange(data_size, dtype=np.int32)
+    np.random.shuffle(data)
+    data_ascending = data.copy()
+    data_ascending.sort()
+    data_descending = data_ascending[::-1]
+    cuda_data_ascending = sort_inplace(data, ascending=True)
+    cuda_data_descending = sort_inplace(data, ascending=False)
+
+    print data_ascending
+    print cuda_data_ascending
+    print data_descending
+    print cuda_data_descending
+    ok_((cuda_data_ascending == data_ascending).all())
+    ok_((cuda_data_descending == data_descending).all())
+
+
 def test_bitonic_cuda():
-    data = np.arange(10, dtype=np.int32)
-    data = data[::-1]
-    print sort_inplace(data)
+    for n in range(4, 10):
+        yield test_bitonic_cuda_two_power, (1 << n)
