@@ -58,7 +58,7 @@ def sort_inplace(in_data, ascending=True, dtype=None):
     shared = len(data) * dtype.itemsize
     block_count = 1
 
-    block = (len(data), 1, 1)
+    block = (int(len(data) / 2), 1, 1)
     grid = (block_count, 1, 1)
 
     test(np.int32(len(data)), drv.InOut(data), np.uint8(ascending), block=block,

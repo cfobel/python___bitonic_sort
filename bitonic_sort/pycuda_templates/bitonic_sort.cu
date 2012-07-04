@@ -10,14 +10,14 @@ extern __shared__ float shared_data[];
 extern "C" __global__ void bitonic_sort_{{ c_type }}(int size, {{ c_type }} *data, bool direction) {
     {{ c_type }} *sh_data = ({{ c_type }} *)&shared_data[0];
 
-    if(threadIdx.x < size) {
-        sh_data[threadIdx.x] = data[threadIdx.x];
+    for(int i = threadIdx.x; i < size; i += blockDim.x) {
+        sh_data[i] = data[i];
     }
 
     bitonic_sort::bitonic_sort<{{ c_type }}>(size, &sh_data[0], direction);
 
-    if(threadIdx.x < size) {
-        data[threadIdx.x] = sh_data[threadIdx.x];
+    for(int i = threadIdx.x; i < size; i += blockDim.x) {
+        data[i] = sh_data[i];
     }
 }
 {% endfor %}
