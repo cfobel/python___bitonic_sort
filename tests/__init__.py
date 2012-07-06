@@ -54,10 +54,17 @@ def test_bitonic_cuda_two_power(data_size):
     data_ascending.sort()
     data_descending = data_ascending[::-1]
     cuda_data_ascending = sort_inplace(data, ascending=True)
-    #cuda_data_descending = sort_inplace(data, ascending=False)
+    cuda_data_descending = sort_inplace(data, ascending=False)
 
+    if not (cuda_data_ascending == data_ascending).all():
+        print 'cuda_data_ascending:', cuda_data_ascending
+        print 'data_ascending:     ', data_ascending
     ok_((cuda_data_ascending == data_ascending).all())
-    #ok_((cuda_data_descending == data_descending).all())
+    if not (cuda_data_descending == data_descending).all():
+        print 'cuda_data_descending:', cuda_data_descending
+        print 'data_descending:     ', data_descending
+    ok_((cuda_data_descending == data_descending).all())
+
 
 
 def test_bitonic_cuda():

@@ -111,8 +111,6 @@ namespace bitonic_sort {
 
     template <class T>
     __device__ void bitonic_sort(int size, volatile T *data, bool direction) {
-        int count = 0;
-
         int two_power_size = 1 << (int)log2((float)size);
         bool ddd = direction;
 
@@ -133,44 +131,32 @@ namespace bitonic_sort {
             T temp;
             int passes = ceil((float)(processed + 1) / blockDim.x);
             for(int k = 0; k < passes; k++) {
-                int i = processed - (k * blockDim.x + threadIdx.x);
-                if(i >= 0) {
+                if(direction) {
+                    int i = processed - (k * blockDim.x + threadIdx.x);
                     if(i > 0) {
                         temp = data[i - 1];
-#if 0
-                        if(i == processed) printf("(processed) i=%d data[%d]\n", i, temp);
-#endif
                     }
-                }
-                __syncthreads();
-                if(i >= 0) {
-#if 0
-                    printf("i=%d temp=%d compare_value=%d\n", i, temp, compare_value);
-#endif
-                    
-                    if(i > 0) {
-                        if(temp >= compare_value) {
-#if 0
-                            printf("temp=%d >= compare_value=%d -> copy left value to data[%d]\n", temp, compare_value, i);
-#endif
+                    __syncthreads();
+                    if(i >= 0) {
+                        if(i > 0 && temp >= compare_value) {
                             data[i] = temp;
                         } else if(data[i] >= compare_value) {
-#if 0
-                            printf("data[%d]=%d >= compare_value=%d -> copy compare_value to data[%d]\n", i, data[i], compare_value, i);
-#endif
                             data[i] = compare_value;
                         }
-                    } else if(i == 0 && data[i] > compare_value) {
-#if 0
-                        printf("i == 0 and data[%d]=%d > compare_value=%d -> copy compare_value to data[%d]\n", i, data[i], compare_value, i);
-#endif
-                        data[i] = compare_value;
                     }
-#if 0
-                    else {
-                        printf("data[%d]=%d compare_value=%d \n", i, data[i], compare_value);
+                } else {
+                    int i = processed - (k * blockDim.x + threadIdx.x);
+                    if(i > 0) {
+                        temp = data[i - 1];
                     }
-#endif
+                    __syncthreads();
+                    if(i >= 0) {
+                        if(i > 0 && temp < compare_value) {
+                            data[i] = temp;
+                        } else if(data[i] <= compare_value) {
+                            data[i] = compare_value;
+                        }
+                    }
                 }
             }
             processed += 1;
