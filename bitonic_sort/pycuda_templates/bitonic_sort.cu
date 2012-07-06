@@ -11,13 +11,17 @@ extern "C" __global__ void bitonic_sort_{{ c_type }}(int size, {{ c_type }} *dat
     {{ c_type }} *sh_data = ({{ c_type }} *)&shared_data[0];
 
     for(int i = threadIdx.x; i < size; i += blockDim.x) {
-        sh_data[i] = data[i];
+        if(i < size) {
+            sh_data[i] = data[i];
+        }
     }
 
     bitonic_sort::bitonic_sort<{{ c_type }}>(size, &sh_data[0], direction);
 
     for(int i = threadIdx.x; i < size; i += blockDim.x) {
-        data[i] = sh_data[i];
+        if(i < size) {
+            data[i] = sh_data[i];
+        }
     }
 }
 {% endfor %}

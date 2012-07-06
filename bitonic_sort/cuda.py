@@ -35,6 +35,10 @@ def get_template_loader():
 jinja_env = Environment(loader=get_template_loader())
 
 
+def log2ceil(x):
+    return int(np.ceil(np.log2(x)))
+
+
 def sort_inplace(in_data, ascending=True, dtype=None):
     code_template = jinja_env.get_template('bitonic_sort.cu')
     mod = SourceModule(code_template.render(), no_extern_c=True,
@@ -58,7 +62,12 @@ def sort_inplace(in_data, ascending=True, dtype=None):
     shared = len(data) * dtype.itemsize
     block_count = 1
 
-    block = (int(len(data) / 2), 1, 1)
+    thread_count =  1 << (int(log2ceil(len(data))) - 1)
+    print 'thread_count: %d' % thread_count
+    #thread_count =  1 << (int(log2ceil(len(data))) - 1)
+    #thread_count =  int(len(data) / 2)
+    
+    block = (thread_count, 1, 1)
     grid = (block_count, 1, 1)
 
     test(np.int32(len(data)), drv.InOut(data), np.uint8(ascending), block=block,
