@@ -111,27 +111,69 @@ namespace bitonic_sort {
 
     template <class T>
     __device__ void bitonic_sort(int size, volatile T *data, bool direction) {
-        int processed = 0;
+        int count = 0;
 
         int two_power_size = 1 << (int)log2((float)size);
         bool ddd = direction;
 
-        int count = 0;
-        volatile T *current_data = data;
+        /* Sort the first largest possible set of elements from the data
+         * whose size is a power of two using bitonic sort.
+         */
+        do_bitonic_sort(two_power_size, data, ddd);
+        do_bitonic_merge(two_power_size, data, ddd);
 
-        while(processed < size) {
-            printf("two_power_size=%d\n", two_power_size);
-            do_bitonic_sort(two_power_size, current_data, ddd);
-            do_bitonic_merge(two_power_size, current_data, ddd);
-            ddd = !ddd;
-            processed += two_power_size;
-            two_power_size = 1 << (int)log2((float)size - processed);
-            current_data = &data[processed];
-            if(count > 0) {
-                do_bitonic_final_merge(current_data - data, data, direction);
-            }
+        int processed = two_power_size;
+
+        // Perform a simple insertion sort to insert remaining elements
+        for(int remaining_index = 0; remaining_index < size - two_power_size;
+                remaining_index++) {
             __syncthreads();
-            count++;
+            T compare_value = data[processed];
+            __syncthreads();
+            T temp;
+            int passes = ceil((float)(processed + 1) / blockDim.x);
+            for(int k = 0; k < passes; k++) {
+                int i = processed - (k * blockDim.x + threadIdx.x);
+                if(i >= 0) {
+                    if(i > 0) {
+                        temp = data[i - 1];
+#if 0
+                        if(i == processed) printf("(processed) i=%d data[%d]\n", i, temp);
+#endif
+                    }
+                }
+                __syncthreads();
+                if(i >= 0) {
+#if 0
+                    printf("i=%d temp=%d compare_value=%d\n", i, temp, compare_value);
+#endif
+                    
+                    if(i > 0) {
+                        if(temp >= compare_value) {
+#if 0
+                            printf("temp=%d >= compare_value=%d -> copy left value to data[%d]\n", temp, compare_value, i);
+#endif
+                            data[i] = temp;
+                        } else if(data[i] >= compare_value) {
+#if 0
+                            printf("data[%d]=%d >= compare_value=%d -> copy compare_value to data[%d]\n", i, data[i], compare_value, i);
+#endif
+                            data[i] = compare_value;
+                        }
+                    } else if(i == 0 && data[i] > compare_value) {
+#if 0
+                        printf("i == 0 and data[%d]=%d > compare_value=%d -> copy compare_value to data[%d]\n", i, data[i], compare_value, i);
+#endif
+                        data[i] = compare_value;
+                    }
+#if 0
+                    else {
+                        printf("data[%d]=%d compare_value=%d \n", i, data[i], compare_value);
+                    }
+#endif
+                }
+            }
+            processed += 1;
         }
     }
 }

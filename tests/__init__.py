@@ -1,6 +1,7 @@
 from __future__ import division
 import copy
 import math
+import random
 
 from nose.tools import eq_, ok_, nottest
 import numpy as np
@@ -16,7 +17,7 @@ def test_sort(sort_func, count):
         data1 = np.array([3, 0, 4, 1, 2])
     else:
         np.random.seed(0)
-        data1 = np.random.randint(0, 100, size=count)
+        data1 = np.random.randint(0, count, size=count)
     data2 = data1.copy()
 
     print data1
@@ -31,13 +32,11 @@ def test_sort(sort_func, count):
         raise ValueError
 
 
-@nottest
 def test_bitonic2n():
     sorter = BitonicSorter()
     for i in range(4, 11):
         yield test_sort, sorter.sort, (1 << i)
 
-@nottest
 def test_bitonic_any_n():
     sorter = BitonicSorterForArbitraryN()
     for i in range(2, 4):
@@ -53,18 +52,21 @@ def test_bitonic_cuda_two_power(data_size):
     np.random.shuffle(data)
     data_ascending = data.copy()
     data_ascending.sort()
-    #data_descending = data_ascending[::-1]
+    data_descending = data_ascending[::-1]
     cuda_data_ascending = sort_inplace(data, ascending=True)
     #cuda_data_descending = sort_inplace(data, ascending=False)
 
-    print 'cpu:', data_ascending
-    print 'cuda:', cuda_data_ascending
-    #print data_descending
-    #print cuda_data_descending
     ok_((cuda_data_ascending == data_ascending).all())
     #ok_((cuda_data_descending == data_descending).all())
 
 
 def test_bitonic_cuda():
-    #for n in range(4, 10):
-    yield test_bitonic_cuda_two_power, 9
+    random.seed(0)
+
+    max_power = 11
+    trial_sizes = [(1 << power) + random.randint(-5, 5)
+            for power in range(3, max_power + 1)]
+    trial_sizes = [min(v, 1 << max_power) for v in trial_sizes]
+
+    for n in trial_sizes:
+        yield test_bitonic_cuda_two_power, n
