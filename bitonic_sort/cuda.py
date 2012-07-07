@@ -39,7 +39,8 @@ def log2ceil(x):
     return int(np.ceil(np.log2(x)))
 
 
-def sort_inplace(in_data, ascending=True, dtype=None):
+def sort_inplace(in_data, ascending=True, dtype=None,
+        thread_count=None):
     code_template = jinja_env.get_template('bitonic_sort.cu')
     mod = SourceModule(code_template.render(), no_extern_c=True,
             options=['-I%s' % get_include_root()], keep=True)
@@ -62,7 +63,9 @@ def sort_inplace(in_data, ascending=True, dtype=None):
     shared = len(data) * dtype.itemsize
     block_count = 1
 
-    thread_count =  1 << (int(log2ceil(len(data))) - 1)
+    default_thread_count =  1 << (int(log2ceil(len(data))) - 1)
+    if thread_count is None:
+        thread_count = default_thread_count
     print 'thread_count: %d' % thread_count
     #thread_count =  1 << (int(log2ceil(len(data))) - 1)
     #thread_count =  int(len(data) / 2)
