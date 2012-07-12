@@ -44,6 +44,15 @@ def test_bitonic_any_n():
 
 
 @nottest
+def test_bitonic_cuda_two_power_single(gold_data, data, direction, thread_count):
+    cuda_data_ = sort_inplace(data, ascending=direction,
+            thread_count=thread_count)
+    if not (cuda_data == gold_data).all():
+        print 'cuda_data:', cuda_data
+        print 'gold_data:', gold_data
+    ok_((cuda_data == gold_data).all())
+
+@nottest
 def test_bitonic_cuda_two_power(data_size, thread_count=None):
     #assert(np.log2(data_size) == int(np.log2(data_size)))
 
@@ -53,26 +62,17 @@ def test_bitonic_cuda_two_power(data_size, thread_count=None):
     data_ascending = data.copy()
     data_ascending.sort()
     data_descending = data_ascending[::-1]
+    gold_data = [data_descending, data_ascending]
 
     if thread_count:
         thread_counts = [thread_count]
     else:
         thread_counts = [1, 3, 7, 32, 47, 129, 138]
-    for thread_count in thread_counts:
-        cuda_data_ascending = sort_inplace(data, ascending=True,
-                thread_count=thread_count)
-        cuda_data_descending = sort_inplace(data, ascending=False,
-                thread_count=thread_count)
 
-        if not (cuda_data_ascending == data_ascending).all():
-            print 'cuda_data_ascending:', cuda_data_ascending
-            print 'data_ascending:     ', data_ascending
-        ok_((cuda_data_ascending == data_ascending).all())
-        if not (cuda_data_descending == data_descending).all():
-            print 'cuda_data_descending:', cuda_data_descending
-            print 'data_descending:     ', data_descending
-        ok_((cuda_data_descending == data_descending).all())
-
+    for direction in [True, False]:
+        for thread_count in thread_counts:
+            yield test_bitonic_cuda_two_power_single,\
+                    gold_data[direction], data, thread_count
 
 
 def test_bitonic_cuda():
@@ -84,4 +84,4 @@ def test_bitonic_cuda():
     trial_sizes = [min(v, 1 << max_power) for v in trial_sizes]
 
     for n in trial_sizes:
-        yield test_bitonic_cuda_two_power, n
+        yield test_bitonic_cuda_two_power(n)
